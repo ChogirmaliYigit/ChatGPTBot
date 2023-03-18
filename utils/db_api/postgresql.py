@@ -51,6 +51,27 @@ class Database:
         );
         """
         await self.execute(sql, execute=True)
+    
+    async def create_table_chats(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS Chats (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        title VARCHAR(255) NULL
+        );
+        """
+        await self.execute(sql, execute=True)
+
+    async def create_table_messages(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS Messages (
+        id SERIAL PRIMARY KEY,
+        message TEXT NOT NULL,
+        chat_id BIGINT NOT NULL,
+        type VARCHAR(50) NOT NULL
+        );
+        """
+        await self.execute(sql, execute=True)
 
     @staticmethod
     def format_args(sql, parameters: dict):
@@ -63,6 +84,14 @@ class Database:
         sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
         return await self.execute(sql, full_name, username, telegram_id, fetchrow=True)
 
+    async def add_chat(self, user_id, title):
+        sql = "INSERT INTO chats (user_id, title) VALUES($1, $2) returning *"
+        return await self.execute(sql, user_id, title, fetchrow=True)
+
+    async def add_message(self, message, chat_id, type):
+        sql = 'INSERT INTO messages (message, chat_id, type) VALUES($1, $2, $3) returning *'
+        return await self.execute(sql, message, chat_id, type, fetchrow=True)
+
     async def select_all_users(self):
         sql = "SELECT * FROM Users"
         return await self.execute(sql, fetch=True)
@@ -72,6 +101,21 @@ class Database:
         sql, parameters = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, *parameters, fetchrow=True)
 
+    async def select_user_chats(self, **kwargs):
+        sql = 'SELECT * FROM Chats WHERE '
+        sql, parameters = self.format_args(sql=sql, parameters=kwargs)
+        return await self.execute(sql, *parameters, fetch=True)
+    
+    async def select_chat(self, **kwargs):
+        sql = 'SELECT * FROM Chats WHERE '
+        sql, parameters = self.format_args(sql=sql, parameters=kwargs)
+        return await self.execute(sql, *parameters, fetchrow=True)
+
+    async def select_chat_messages(self, **kwargs):
+        sql = 'SELECT * FROM Messages WHERE '
+        sql, parameters = self.format_args(sql=sql, parameters=kwargs)
+        return await self.execute(sql, *parameters, fetch=True)
+
     async def count_users(self):
         sql = "SELECT COUNT(*) FROM Users"
         return await self.execute(sql, fetchval=True)
@@ -80,8 +124,17 @@ class Database:
         sql = "UPDATE Users SET username=$1 WHERE telegram_id=$2"
         return await self.execute(sql, username, telegram_id, execute=True)
 
+    async def update_chat_title(self, title, user_id, id):
+        sql = 'UPDATE Chats SET title=$1 WHERE user_id=$2 AND id=$3'
+        return await self.execute(sql, title, user_id, id, execute=True)
+
     async def delete_users(self):
         await self.execute("DELETE FROM Users WHERE TRUE", execute=True)
+    
+    async def delete_chat(self, **kwargs):
+        sql ='DELETE FROM Chats WHERE '
+        sql, parameters = self.format_args(sql=sql, parameters=kwargs)
+        await self.execute(sql, *parameters, fetch=True)
 
     async def drop_users(self):
         await self.execute("DROP TABLE Users", execute=True)
