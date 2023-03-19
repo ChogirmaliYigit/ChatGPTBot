@@ -6,4 +6,5 @@ class GPTState(StatesGroup):
     new_chat = State()
     chat_list = State()
     continue_chat = State()
-    edit_chat_title = State()
+    edit_new_chat_title = State()
+    edit_old_chat_title = State()
