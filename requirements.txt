@@ -3,3 +3,6 @@ environs~=8.0.0
 pandas==1.5.3
 asyncpg==0.27.0
 openai==0.27.2
+django==4.1.7
+psycopg2-binary==2.9.5
+django-jazzmin==2.6.0

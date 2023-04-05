@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %} Chats List {% endblock title %}
+
+{% block content %}
+
+<aside>
+    <!-- <header>
+        <input type="text" placeholder="search">
+    </header> -->
+    <ul>
+        {% for chat in chats %}
+            <li>
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUIwD84MUO1g9n6U0VWNJKRK0pPFVGTXsBeQ3KTeeGTpxX7VKB3-rMoW1J2bvU2blIFiM&usqp=CAU" alt="ChatGPT" title="ChatGPT">
+                <div>
+                    <h2>{{ chat.title }}</h2>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</aside>
+
+{% endblock content %}

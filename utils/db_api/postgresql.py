@@ -3,13 +3,14 @@ from typing import Union
 import asyncpg
 from asyncpg import Connection
 from asyncpg.pool import Pool
-
+from datetime import datetime
 from data import config
 
 
 class Database:
     def __init__(self):
-        self.pool: Union[Pool, None] = None
+        self.pool: Union[Pool, None]
+        self.now = datetime.now()
 
     async def create(self):
         self.pool = await asyncpg.create_pool(
@@ -81,16 +82,16 @@ class Database:
         return sql, tuple(parameters.values())
 
     async def add_user(self, full_name, username, telegram_id):
-        sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
-        return await self.execute(sql, full_name, username, telegram_id, fetchrow=True)
+        sql = "INSERT INTO users (full_name, username, telegram_id, created) VALUES($1, $2, $3, $4) returning *"
+        return await self.execute(sql, full_name, username, telegram_id, self.now, fetchrow=True)
 
     async def add_chat(self, user_id, title):
-        sql = "INSERT INTO chats (user_id, title) VALUES($1, $2) returning *"
-        return await self.execute(sql, user_id, title, fetchrow=True)
+        sql = "INSERT INTO chats (user_id, title, created) VALUES($1, $2, $3) returning *"
+        return await self.execute(sql, user_id, title, self.now, fetchrow=True)
 
     async def add_message(self, message, chat_id, type):
-        sql = 'INSERT INTO messages (message, chat_id, type) VALUES($1, $2, $3) returning *'
-        return await self.execute(sql, message, chat_id, type, fetchrow=True)
+        sql = 'INSERT INTO messages (message, chat_id, type, created) VALUES($1, $2, $3, $4) returning *'
+        return await self.execute(sql, message, chat_id, type, self.now, fetchrow=True)
 
     async def select_all_users(self):
         sql = "SELECT * FROM Users"
@@ -134,7 +135,12 @@ class Database:
     async def delete_chat(self, **kwargs):
         sql ='DELETE FROM Chats WHERE '
         sql, parameters = self.format_args(sql=sql, parameters=kwargs)
-        await self.execute(sql, *parameters, fetch=True)
+        await self.execute(sql, *parameters, execute=True)
+    
+    async def delete_messages(self, **kwargs):
+        sql ='DELETE FROM Messages WHERE '
+        sql, parameters = self.format_args(sql=sql, parameters=kwargs)
+        await self.execute(sql, *parameters, execute=True)
 
     async def drop_users(self):
         await self.execute("DROP TABLE Users", execute=True)

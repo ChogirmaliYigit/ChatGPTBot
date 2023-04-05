@@ -8,3 +8,9 @@ class GPTState(StatesGroup):
     continue_chat = State()
     edit_new_chat_title = State()
     edit_old_chat_title = State()
+
+
+class DalleState(StatesGroup):
+    get_prompt = State()
+    get_num = State()
+    get_model = State()
