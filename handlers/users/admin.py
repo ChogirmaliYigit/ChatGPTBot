@@ -30,13 +30,11 @@ async def get_all_users(message: types.Message):
 @dp.message_handler(text="/reklama", user_id=ADMINS, state="*")
 async def get_optional_ad(message: types.Message, state: FSMContext):
     await state.finish()
-    msg = await message.answer(text="Menga reklama uchun ixtiyoriy xabar jo'nating va men uni foydalanuvchilarga jo'nataman.")
-    await state.update_data({'msg': msg})
+    await message.answer(text="Menga reklama uchun ixtiyoriy xabar jo'nating va men uni foydalanuvchilarga jo'nataman.")
     await GPTState.get_ads.set()
 
 @dp.message_handler(state=GPTState.get_ads, content_types=['photo', 'video', 'document', 'sticker'])
-async def send_optional_ad(message: types.Message, state: FSMContext):
-    data = await state.get_data()
+async def send_optional_ad(message: types.Message, state: FSMContext):    
     users = await db.select_all_users()
     try:
         for user in users:
