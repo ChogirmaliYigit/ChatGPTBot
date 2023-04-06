@@ -33,7 +33,7 @@ async def get_optional_ad(message: types.Message, state: FSMContext):
     await message.answer(text="Menga reklama uchun ixtiyoriy xabar jo'nating va men uni foydalanuvchilarga jo'nataman.")
     await GPTState.get_ads.set()
 
-@dp.message_handler(state=GPTState.get_ads, content_types=['photo', 'video', 'document', 'sticker'])
+@dp.message_handler(state=GPTState.get_ads, content_types=['photo', 'video', 'document', 'sticker', 'text'])
 async def send_optional_ad(message: types.Message, state: FSMContext):    
     users = await db.select_all_users()
     try:
