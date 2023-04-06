@@ -8,6 +8,7 @@ class GPTState(StatesGroup):
     continue_chat = State()
     edit_new_chat_title = State()
     edit_old_chat_title = State()
+    get_ads = State()
 
 
 class DalleState(StatesGroup):
