@@ -44,7 +44,6 @@ async def send_optional_ad(message: types.Message, state: FSMContext):
                 await asyncio.sleep(0.05)
             except Exception:
                 await bot.send_message(chat_id=user_id,text=f"{user[1]} botni bloklagani uchun unga reklama bormadi")
-                
     except Exception as error:
         print(error)
     finally:
