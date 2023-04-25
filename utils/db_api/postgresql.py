@@ -82,16 +82,16 @@ class Database:
         return sql, tuple(parameters.values())
 
     async def add_user(self, full_name, username, telegram_id):
-        sql = "INSERT INTO users (full_name, username, telegram_id, created) VALUES($1, $2, $3, $4) returning *"
-        return await self.execute(sql, full_name, username, telegram_id, self.now, fetchrow=True)
+        sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
+        return await self.execute(sql, full_name, username, telegram_id, fetchrow=True)
 
     async def add_chat(self, user_id, title):
-        sql = "INSERT INTO chats (user_id, title, created) VALUES($1, $2, $3) returning *"
-        return await self.execute(sql, user_id, title, self.now, fetchrow=True)
+        sql = "INSERT INTO chats (user_id, title) VALUES($1, $2) returning *"
+        return await self.execute(sql, user_id, title, fetchrow=True)
 
     async def add_message(self, message, chat_id, type):
-        sql = 'INSERT INTO messages (message, chat_id, type, created) VALUES($1, $2, $3, $4) returning *'
-        return await self.execute(sql, message, chat_id, type, self.now, fetchrow=True)
+        sql = 'INSERT INTO messages (message, chat_id, type) VALUES($1, $2, $3) returning *'
+        return await self.execute(sql, message, chat_id, type, fetchrow=True)
 
     async def select_all_users(self):
         sql = "SELECT * FROM Users"
