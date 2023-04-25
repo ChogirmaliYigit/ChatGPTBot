@@ -3,13 +3,14 @@ from typing import Union
 import asyncpg
 from asyncpg import Connection
 from asyncpg.pool import Pool
-
+from datetime import datetime
 from data import config
 
 
 class Database:
     def __init__(self):
-        self.pool: Union[Pool, None] = None
+        self.pool: Union[Pool, None]
+        self.now = datetime.now()
 
     async def create(self):
         self.pool = await asyncpg.create_pool(
@@ -134,7 +135,12 @@ class Database:
     async def delete_chat(self, **kwargs):
         sql ='DELETE FROM Chats WHERE '
         sql, parameters = self.format_args(sql=sql, parameters=kwargs)
-        await self.execute(sql, *parameters, fetch=True)
+        await self.execute(sql, *parameters, execute=True)
+    
+    async def delete_messages(self, **kwargs):
+        sql ='DELETE FROM Messages WHERE '
+        sql, parameters = self.format_args(sql=sql, parameters=kwargs)
+        await self.execute(sql, *parameters, execute=True)
 
     async def drop_users(self):
         await self.execute("DROP TABLE Users", execute=True)

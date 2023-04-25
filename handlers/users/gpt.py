@@ -44,9 +44,10 @@ async def get_new_title(message: types.Message, state: FSMContext):
 @dp.message_handler(text="➕ Yangi Chat", state='*')
 async def start_new_chat(message: types.Message, state: FSMContext):
     await state.finish()
-    chats = await db.select_user_chats(user_id=message.from_user.id)
-    await db.add_chat(user_id=message.from_user.id, title=f'Chat - {len(chats)+1}')
-    await state.update_data({'new_chat_id': len(chats)+1, 'new_chat_title': f'Chat - {len(chats)+1}'})
+    user = await db.select_user(telegram_id=message.from_user.id)
+    chats = await db.select_user_chats(user_id=user[0])
+    chat = await db.add_chat(user_id=user[0], title=f'Chat - {len(chats)+1}')
+    await state.update_data({'new_chat_id': chat['id'], 'new_chat_title': f'Chat - {len(chats)+1}'})
     await message.answer(text="<b>Qiziqtirgan savolingiz bo'lsa menga yozing!</b>", reply_markup=close_chat_markup)
     await GPTState.new_chat.set()
 
@@ -54,7 +55,6 @@ async def start_new_chat(message: types.Message, state: FSMContext):
 @dp.message_handler(state=GPTState.new_chat)
 async def get_user_message(message: types.Message, state: FSMContext):
     data = await state.get_data()
-    # await state.update_data({'chat_id': int(data.get('new_chat_id'))})
     await db.add_message(message=message.text, chat_id=int(data.get('new_chat_id')), type='user')
 
     message_history = await db.select_chat_messages(chat_id=data.get('new_chat_id'))
@@ -67,19 +67,19 @@ async def get_user_message(message: types.Message, state: FSMContext):
     msg_id = msg.message_id
 
     for sticker in stickers:
-        await asyncio.sleep(3.5)
+        await asyncio.sleep(3)
         await bot.edit_message_text(text=sticker, chat_id=message.chat.id, message_id=msg_id)
 
-    response = chat_with_gpt(messages=messages)
-    await bot.delete_message(chat_id=message.chat.id, message_id=msg_id)
-    await message.answer(text=response)
+    response = await chat_with_gpt(messages=messages)
+    await bot.edit_message_text(text=response, chat_id=message.chat.id, message_id=msg_id)
     await db.add_message(message=response, chat_id=data.get('new_chat_id'), type='assistant')
 
 
 @dp.message_handler(text='📝 Chatlar tarixi', state='*')
 async def get_chat_list(message: types.Message, state: FSMContext):
     await state.finish()
-    chats = await db.select_user_chats(user_id=message.from_user.id)
+    user = await db.select_user(telegram_id=message.from_user.id)
+    chats = await db.select_user_chats(user_id=user[0])
     if chats:
         await message.answer(text='<b>Sizning chatlaringiz quyidagilar:</b>', reply_markup=make_chats_markup(chats=chats))
         await GPTState.chat_list.set()
@@ -91,8 +91,10 @@ async def get_chat_list(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=GPTState.chat_list)
 async def get_chat(call: types.CallbackQuery, state: FSMContext):
     if call.data.split('_')[0] == 'delete':
+        await db.delete_messages(chat_id=int(call.data.split('_')[-1]))
         await db.delete_chat(id=int(call.data.split('_')[-1]))
-        chats = await db.select_user_chats(user_id=call.from_user.id)
+        user = await db.select_user(telegram_id=call.from_user.id)
+        chats = await db.select_user_chats(user_id=user[0])
         if chats:
             await call.message.edit_text(text='<b>Sizning chatlaringiz quyidagilar:</b>', reply_markup=make_chats_markup(chats=chats))
         else:
@@ -126,7 +128,7 @@ async def get_user_message(message: types.Message, state: FSMContext):
         await asyncio.sleep(3.5)
         await bot.edit_message_text(text=sticker, chat_id=message.chat.id, message_id=msg_id)
 
-    response = chat_with_gpt(messages=messages)
+    response = await chat_with_gpt(messages=messages)
     await bot.delete_message(chat_id=message.chat.id, message_id=msg_id)
     await message.answer(text=response)
     await db.add_message(message=response, chat_id=data.get('old_chat_id'), type='assistant')
